@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard | HGS</title>
+    <style>
+        /* --- General Setup --- */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .primary-green { background-color: #2ecc71; }
+        .text-primary-green { color: #2ecc71; }
+        .hover-green:hover { background-color: #27ae60; }
+
+        /* --- Header --- */
+        .header {
+            background-color: #2ecc71;
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border: 1px solid white;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        .header a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* --- Section Styling --- */
+        .section-card {
+            background-color: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-top: 5px solid #2ecc71;
+        }
+
+        .section-card h2 {
+            font-size: 22px;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        /* --- Form Styling --- */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        .submit-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        /* --- Table Styling --- */
+        .grievance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .grievance-table th, .grievance-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .grievance-table th {
+            background-color: #f8f8f8;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .status-tag {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+        }
+
+        .status-pending { background-color: #f39c12; }
+        .status-in-review { background-color: #3498db; }
+        .status-resolved { background-color: #2ecc71; }
+        .status-closed { background-color: #e74c3c; } /* Red for final stage */
+        
+        /* New: Feedback/Rate Button Style */
+        .feedback-btn {
+            background-color: #e67e22; /* Orange for action */
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+        .feedback-btn:hover {
+            background-color: #d35400;
+        }
+
+        /* --- Modal Styling --- */
+        .modal {
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 1000; /* High z-index */
+        }
+        .modal-content {
+            background: white; 
+            width: 80%; 
+            max-width: 600px; 
+            margin: 50px auto; 
+            padding: 30px; 
+            border-radius: 8px;
+        }
+
+        /* --- New: Timeline Styling --- */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            padding: 0 10px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 5%;
+            right: 5%;
+            height: 4px;
+            background: #ccc;
+            z-index: 1;
+        }
+        .timeline-step {
+            width: 20%;
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+        .timeline-circle {
+            width: 20px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 3px solid white;
+            transition: background 0.3s;
+        }
+        .timeline-step.active .timeline-circle {
+            background: #2ecc71;
+        }
+        .timeline-step.active p {
+            font-weight: bold;
+            color: #2ecc71;
+        }
+        
+        /* New: Rating Stars */
+        .rating-stars {
+            font-size: 30px;
+            color: #ccc;
+            display: inline-block;
+        }
+        .rating-stars span {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .rating-stars span.active {
+            color: #f1c40f; /* Yellow star color */
+        }
+
+        /* Upload previews */
+        .upload-area { border: 2px dashed #e0e0e0; padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; }
+        .upload-area.dragover { border-color: #2ecc71; background: #f8fff8; }
+        .thumbs { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+        .thumb { width:72px; height:72px; border-radius:6px; overflow:hidden; position:relative; border:1px solid #ddd; }
+        .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+        .thumb button { position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.6); color:white; border:0; border-radius:4px; padding:2px 6px; cursor:pointer; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Welcome, Patient User</h1>
+        <a href="home.html">Logout</a>
+    </div>
+
+    <div class="main-content">
+        <!-- Quick controls: search + summary -->
+        <div class="section-card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1; min-width:220px;">
+                <input id="search-input" type="search" placeholder="Search by subject, category or ID..." style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;" />
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <div style="font-size:14px; color:#555">Total: <strong id="count-total">0</strong></div>
+                <div style="font-size:14px; color:#555">Pending: <strong id="count-pending">0</strong></div>
+                <div style="font-size:14px; color:#555">In Review: <strong id="count-in-review">0</strong></div>
+                <div style="font-size:14px; color:#555">Resolved: <strong id="count-resolved">0</strong></div>
+                <div style="font-size:14px; color:#555">Closed: <strong id="count-closed">0</strong></div>
+            </div>
+        </div>
+        
+        <div id="submission-section" class="section-card">
+            <h2>📝 Submit a New Grievance</h2>
+            <form id="grievance-form">
+
+                <!-- New: image upload area (max 3 images, images only) -->
+                <div class="form-group">
+                    <label for="grievance-images">Upload up to 3 photos (images only)</label>
+                    <div id="upload-area" class="upload-area" tabindex="0">Drag & drop images here or click to select</div>
+                    <input type="file" id="grievance-images" accept="image/*" multiple style="display:none">
+                    <div id="image-previews" class="thumbs" aria-live="polite"></div>
+                    <p id="upload-error" style="color:#e74c3c; display:none; margin-top:8px; font-size:13px;"></p>
+                </div>
+
+                
+                <div class="form-group">
+                    <label for="grievance-subject">Subject (Brief Summary)</label>
+                    <input type="text" id="grievance-subject" required maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label for="grievance-category">Category</label>
+                    <select id="grievance-category" required>
+                        <option value="" disabled selected>Select a category</option>
+                        <option value="Care Quality">Care Quality (e.g., Treatment, Mistakes)</option>
+                        <option value="Staff Conduct">Staff Conduct (e.g., Attitude, Communication)</option>
+                        <option value="Facilities">Facilities (e.g., Cleanliness, Maintenance)</option>
+                        <option value="Billing">Billing & Insurance</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="grievance-details">Details of the Grievance</label>
+                    <textarea id="grievance-details" rows="5" required placeholder="Describe your experience, including date and location, if possible."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="grievance-anonymity">Reporting Anonymity</label>
+                    <select id="grievance-anonymity" required>
+                        <option value="No">Report with my name (Recommended)</option>
+                        <option value="Yes">Report Anonymously</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="submit-btn primary-green hover-green">Submit Grievance</button>
+            </form>
+        </div>
+
+        <div id="list-section" class="section-card">
+            <h2>⏱️ My Submitted Grievances</h2>
+            <table class="grievance-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Subject</th>
+                        <th>Category</th>
+                        <th>Submitted Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="my-grievance-list">
+                    </tbody>
+            </table>
+            <p id="no-grievances-msg" style="text-align: center; color: #777; margin-top: 20px; display: none;">You haven't submitted any grievances yet.</p>
+        </div>
+
+    <div id="status-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-primary-green" style="margin-top: 0;">Grievance Status</h3>
+            
+            <h4>Resolution Timeline</h4>
+            <div id="timeline" class="timeline">
+                </div>
+
+            <h4>Communication Log</h4>
+            <div id="communication-log" style="border: 1px solid #ccc; padding: 15px; height: 150px; overflow-y: scroll; margin-bottom: 15px; font-size: 14px;">
+                </div>
+            
+            <button onclick="closeModal('status-modal')" class="submit-btn" style="background-color: #6c757d;">Close</button>
+        </div>
+    </div>
+    
+    <div id="feedback-modal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-primary-green" style="margin-top: 0;">Rate Resolution for <span id="feedback-id"></span></h3>
+            
+            <div class="form-group">
+                <label>Overall Satisfaction Rating:</label>
+                <div id="rating-container" class="rating-stars" data-rating="0">
+                    <span data-value="1" onclick="setRating(1)">★</span>
+                    <span data-value="2" onclick="setRating(2)">★</span>
+                    <span data-value="3" onclick="setRating(3)">★</span>
+                    <span data-value="4" onclick="setRating(4)">★</span>
+                    <span data-value="5" onclick="setRating(5)">★</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="feedback-comment">Comments on Resolution (Optional)</label>
+                <textarea id="feedback-comment" rows="4" placeholder="How satisfied were you with the investigation and outcome?"></textarea>
+            </div>
+            
+            <button onclick="submitFeedback()" class="submit-btn primary-green hover-green">Submit Rating & Close</button>
+            <button onclick="closeModal('feedback-modal')" class="submit-btn" style="background-color: #6c757d; margin-left: 10px;">Cancel</button>
+        </div>
+    </div>
+
+    </div>
+
+    <script>
+        // --- Simulated Database (Client-Side Storage) ---
+        let patientGrievances = [
+            { 
+                id: 'HGS-001', 
+                subject: 'Parking Lot Security', 
+                category: 'Facilities', 
+                date: '2025-11-15', 
+                status: 'In Review', 
+                anonymity: 'No', 
+                log: [
+                    { step: 'Submitted', message: 'Grievance submitted successfully.', timestamp: '2025-11-15 09:00' },
+                    { step: 'Assigned', message: 'Assigned to Maintenance Dept.', timestamp: '2025-11-16 10:30' },
+                    { step: 'Investigating', message: 'Facility inspection scheduled.', timestamp: '2025-11-17 14:00' }
+                ],
+                feedback: null
+            },
+            { 
+                id: 'HGS-002', 
+                subject: 'Doctor Communication', 
+                category: 'Care Quality', 
+                date: '2025-11-10', 
+                status: 'Resolved', 
+                anonymity: 'Yes',
+                log: [
+                    { step: 'Submitted', message: 'Grievance submitted successfully.', timestamp: '2025-11-10 14:00' },
+                    { step: 'Assigned', message: 'Assigned to Clinical Review Team.', timestamp: '2025-11-11 09:00' },
+                    { step: 'Investigating', message: 'Staff interviews conducted.', timestamp: '2025-11-12 11:00' },
+                    { step: 'Resolved', message: 'Review complete. New communication protocol established.', timestamp: '2025-11-14 16:30' }
+                ],
+                feedback: null // feedback: { rating: 5, comment: "Excellent service." } would be stored here
+            },
+            { 
+                id: 'HGS-003', 
+                subject: 'Billing Error', 
+                category: 'Billing', 
+                date: '2025-11-18', 
+                status: 'Closed', 
+                anonymity: 'No',
+                log: [
+                    { step: 'Submitted', message: 'Grievance submitted successfully.', timestamp: '2025-11-18 10:00' },
+                    { step: 'Assigned', message: 'Assigned to Finance Dept.', timestamp: '2025-11-18 11:00' },
+                    { step: 'Investigating', message: 'Error corrected and refund issued.', timestamp: '2025-11-19 15:00' },
+                    { step: 'Resolved', message: 'Issue officially resolved.', timestamp: '2025-11-19 16:00' }
+                ],
+                feedback: { rating: 4, comment: "Billing was slow, but the resolution was fast and fair." }
+            }
+        ];
+        // Ensure existing sample entries have images array
+        patientGrievances = patientGrievances.map(function(g){ g.images = g.images || []; return g; });
+        
+        // Timeline Steps Definition
+        const timelineSteps = ['Submitted', 'Assigned', 'Investigating', 'Resolved', 'Closed'];
+
+        // --- Helper: image handling utilities ---
+        const MAX_IMAGES = 3;
+        function isImageFile(file) {
+            return file && file.type && file.type.startsWith('image/');
+        }
+
+        // State for current upload (data URLs)
+        let currentUploadData = [];
+
+        function updatePreviews() {
+            const container = document.getElementById('image-previews');
+            container.innerHTML = '';
+            currentUploadData.forEach((data, idx) => {
+                const div = document.createElement('div');
+                div.className = 'thumb';
+                div.innerHTML = `<img src="${data}" alt="upload-${idx}" />`;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.title = 'Remove image';
+                btn.textContent = '✕';
+                btn.addEventListener('click', (e) => { e.stopPropagation(); currentUploadData.splice(idx,1); updatePreviews(); });
+                div.appendChild(btn);
+                container.appendChild(div);
+            });
+            document.getElementById('upload-error').style.display = 'none';
+        }
+
+        // Setup upload area interactions
+        (function setupUploadArea(){
+            const input = document.getElementById('grievance-images');
+            const area = document.getElementById('upload-area');
+            if (!input || !area) return;
+
+            area.addEventListener('click', () => input.click());
+            area.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' ') input.click(); });
+
+            input.addEventListener('change', async (e) => {
+                const files = Array.from(e.target.files || []);
+                await handleNewFiles(files);
+                input.value = '';
+            });
+
+            ['dragenter','dragover'].forEach(ev => area.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); area.classList.add('dragover'); }));
+            ['dragleave','drop','dragend'].forEach(ev => area.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); area.classList.remove('dragover'); }));
+            area.addEventListener('drop', async (e) => {
+                const files = Array.from(e.dataTransfer.files || []);
+                await handleNewFiles(files);
+            });
+        })();
+
+        async function handleNewFiles(files) {
+            const errEl = document.getElementById('upload-error');
+            // filter images
+            const justImages = files.filter(isImageFile);
+            if (justImages.length !== files.length) {
+                errEl.textContent = 'Only image files are allowed.';
+                errEl.style.display = 'block';
+                return;
+            }
+            if (currentUploadData.length + justImages.length > MAX_IMAGES) {
+                errEl.textContent = `Maximum ${MAX_IMAGES} images allowed.`;
+                errEl.style.display = 'block';
+                return;
+            }
+            // read files
+            try {
+                const datas = await Promise.all(justImages.map(f => readFileAsDataURL(f)));
+                currentUploadData.push(...datas);
+                updatePreviews();
+            } catch (e) {
+                errEl.textContent = 'Error reading files.';
+                errEl.style.display = 'block';
+            }
+        }
+
+        // Read a File to dataURL, returns a Promise
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- Core Functions ---
+        
+        const renderGrievanceList = () => {
+            const listBody = document.getElementById('my-grievance-list');
+            listBody.innerHTML = '';
+            
+            // Apply search filter
+            const q = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            const filtered = patientGrievances.filter(g => {
+                if (!q) return true;
+                return (g.subject || '').toLowerCase().includes(q) || (g.category || '').toLowerCase().includes(q) || (g.id || '').toLowerCase().includes(q);
+            });
+
+            // Update counters
+            updateCounts();
+
+            if (filtered.length === 0) {
+                document.getElementById('no-grievances-msg').style.display = 'block';
+                return;
+            }
+            document.getElementById('no-grievances-msg').style.display = 'none';
+
+            filtered.forEach(g => {
+                const statusClass = g.status.toLowerCase().replace(' ', '-');
+                const row = listBody.insertRow();
+                row.style.cursor = 'default';
+                
+                let actionButton;
+
+                if (g.status === 'Resolved' && g.feedback === null) {
+                    // New Feature: Feedback button for Resolved cases
+                    actionButton = `<button onclick="openFeedbackModal('${g.id}')" class="feedback-btn">Rate & Close</button>`;
+                } else if (g.status === 'Closed') {
+                    // New Feature: Show rating for Closed cases
+                    actionButton = `<span style="font-size: 14px; color: #444;">Rated ${g.feedback.rating}★</span>`;
+                } else {
+                    actionButton = `<button onclick="openStatusModal('${g.id}')" style="border: none; background: none; cursor: pointer; color: #3498db; font-weight: bold;">View Status</button>`;
+                }
+                
+                row.innerHTML = `
+                    <td>${g.id}</td>
+                    <td>${g.subject} ${g.images && g.images.length ? `<div style="font-size:12px;color:#666; margin-top:6px;">Images: ${g.images.length}</div>` : ''}</td>
+                    <td>${g.category}</td>
+                    <td>${g.date}</td>
+                    <td><span class="status-tag status-${statusClass}">${g.status}</span></td>
+                    <td>${actionButton}</td>
+                `;
+                // make row clickable to open status modal except for action button clicks
+                row.addEventListener('click', (ev) => {
+                    if (ev.target.tagName.toLowerCase() === 'button' || ev.target.closest('button')) return;
+                    openStatusModal(g.id);
+                });
+            });
+        };
+
+        // Function to handle new submission
+        document.getElementById('grievance-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newIdNum = patientGrievances.length + 1;
+            const newId = 'HGS-' + String(newIdNum).padStart(3, '0');
+            
+            const newGrievance = {
+                id: newId,
+                subject: document.getElementById('grievance-subject').value,
+                category: document.getElementById('grievance-category').value,
+                date: new Date().toISOString().slice(0, 10),
+                status: 'Pending', // New grievances start as Pending
+                anonymity: document.getElementById('grievance-anonymity').value,
+                log: [{ step: 'Submitted', message: 'Grievance submitted successfully.', timestamp: new Date().toLocaleTimeString() }],
+                images: currentUploadData.slice(),
+                feedback: null
+            };
+
+            patientGrievances.push(newGrievance);
+            // clear current uploads
+            currentUploadData = [];
+            updatePreviews();
+            document.getElementById('upload-error').style.display = 'none';
+            renderGrievanceList();
+            
+            alert(`Grievance ${newId} submitted successfully! Status: Pending.`);
+            this.reset();
+        });
+
+        // --- Modal & Status Tracking Functions ---
+
+        const openModal = (modalId) => {
+             document.getElementById(modalId).style.display = 'block';
+        }
+
+        const closeModal = (modalId) => {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+
+        const openStatusModal = (id) => {
+            const grievance = patientGrievances.find(g => g.id === id);
+            if (!grievance) return;
+
+            document.getElementById('modal-title').textContent = `Grievance ${id}: ${grievance.subject}`;
+            
+            // 1. Render Communication Log
+            const logElement = document.getElementById('communication-log');
+            logElement.innerHTML = '';
+            // Use reverse() to show latest message first in the log view
+            grievance.log.slice().reverse().forEach(item => {
+                const line = document.createElement('p');
+                line.style.margin = '5px 0';
+                line.style.fontSize = '14px';
+                line.innerHTML = `<strong>[${item.timestamp}] (${item.step}):</strong> ${item.message}`;
+                logElement.appendChild(line);
+            });
+            
+            // 2. Render Timeline (Enhanced Feature)
+            const timelineElement = document.getElementById('timeline');
+            timelineElement.innerHTML = '';
+            
+            const currentStepIndex = timelineSteps.indexOf(grievance.status);
+            
+            timelineSteps.forEach((step, index) => {
+                const isActive = index <= currentStepIndex;
+                const stepDiv = document.createElement('div');
+                stepDiv.className = `timeline-step ${isActive ? 'active' : ''}`;
+                stepDiv.innerHTML = `
+                    <div class="timeline-circle"></div>
+                    <p>${step}</p>
+                `;
+                timelineElement.appendChild(stepDiv);
+            });
+
+            // 3. Render images (if any)
+            const imagesContainerId = 'status-images';
+            let imgContainer = document.getElementById(imagesContainerId);
+            if (!imgContainer) {
+                imgContainer = document.createElement('div');
+                imgContainer.id = imagesContainerId;
+                imgContainer.style.marginTop = '12px';
+                imgContainer.style.display = 'flex';
+                imgContainer.style.gap = '8px';
+                document.getElementById('communication-log').parentNode.insertBefore(imgContainer, document.getElementById('communication-log').nextSibling);
+            }
+            imgContainer.innerHTML = '';
+            if (grievance.images && grievance.images.length) {
+                grievance.images.forEach((src, idx) => {
+                    const thumb = document.createElement('div');
+                    thumb.style.width = '96px';
+                    thumb.style.height = '64px';
+                    thumb.style.overflow = 'hidden';
+                    thumb.style.border = '1px solid #ddd';
+                    thumb.style.borderRadius = '6px';
+                    thumb.style.cursor = 'pointer';
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    thumb.appendChild(img);
+                    thumb.addEventListener('click', () => { window.open(src); });
+                    imgContainer.appendChild(thumb);
+                });
+            }
+
+            openModal('status-modal');
+        };
+
+
+        // --- New Feedback Features ---
+        let currentFeedbackId = null;
+
+        const openFeedbackModal = (id) => {
+            currentFeedbackId = id;
+            document.getElementById('feedback-id').textContent = id;
+            document.getElementById('feedback-comment').value = '';
+            setRating(0); // Reset stars
+            openModal('feedback-modal');
+        };
+
+        const setRating = (value) => {
+            const container = document.getElementById('rating-container');
+            container.dataset.rating = value;
+            const stars = container.querySelectorAll('span');
+            stars.forEach(star => {
+                const starValue = parseInt(star.dataset.value);
+                star.classList.toggle('active', starValue <= value);
+            });
+        };
+
+        const submitFeedback = () => {
+            const ratingContainer = document.getElementById('rating-container');
+            const rating = parseInt(ratingContainer.dataset.rating);
+            const comment = document.getElementById('feedback-comment').value;
+
+            if (rating === 0) {
+                alert("Please provide a star rating.");
+                return;
+            }
+            
+            const grievanceIndex = patientGrievances.findIndex(g => g.id === currentFeedbackId);
+            if (grievanceIndex !== -1) {
+                // 1. Update status to Closed
+                patientGrievances[grievanceIndex].status = 'Closed';
+                
+                // 2. Store feedback
+                patientGrievances[grievanceIndex].feedback = { rating, comment };
+                
+                // 3. Add log entry
+                patientGrievances[grievanceIndex].log.push({
+                    step: 'Closed',
+                    message: `Closed by reporter with a rating of ${rating} stars.`,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+
+                alert(`Thank you for your feedback! Grievance ${currentFeedbackId} is now Closed.`);
+                
+                closeModal('feedback-modal');
+                renderGrievanceList(); // Refresh the table
+            }
+        };
+
+        // Initial load
+        // Update counters and setup search listener
+        function updateCounts() {
+            document.getElementById('count-total').textContent = patientGrievances.length;
+            document.getElementById('count-pending').textContent = patientGrievances.filter(g=>g.status==='Pending').length;
+            document.getElementById('count-in-review').textContent = patientGrievances.filter(g=>g.status==='In Review').length;
+            document.getElementById('count-resolved').textContent = patientGrievances.filter(g=>g.status==='Resolved').length;
+            document.getElementById('count-closed').textContent = patientGrievances.filter(g=>g.status==='Closed').length;
+        }
+
+        document.getElementById('search-input')?.addEventListener('input', () => renderGrievanceList());
+        document.addEventListener('DOMContentLoaded', () => { updateCounts(); renderGrievanceList(); });
+    </script>
+</body>
+</html>
