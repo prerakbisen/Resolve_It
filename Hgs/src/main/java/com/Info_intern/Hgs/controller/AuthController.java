@@ -7,6 +7,9 @@ import lombok.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import com.Info_intern.Hgs.security.JwtUtil;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -16,14 +19,31 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @PostMapping("/register")
     public User register(@RequestBody User user) {
-        return userService.register(user);
+        User saved = userService.register(user);
+        saved.setPassword(null);
+        return saved;
     }
 
     @PostMapping("/login")
-    public User login(@RequestBody LoginRequest login) {
-        return userService.login(login.getEmail(), login.getPassword());
+    public AuthResponse login(@RequestBody LoginRequest login) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));
+
+        org.springframework.security.core.userdetails.UserDetails userDetails = userService.loadUserByUsername(login.getEmail());
+
+        String token = jwtUtil.generateToken(userDetails);
+
+        User user = userService.login(login.getEmail(), login.getPassword());
+        user.setPassword(null);
+
+        return new AuthResponse(token, user);
     }
 }
 

@@ -97,23 +97,24 @@ async function validateLogin(event) {
         return;
     }
 
-    // Save logged-in user in browser
-    localStorage.setItem("user", JSON.stringify(apiRes));
-
-    // Redirect by role
-    switch (apiRes.role) {
-        case "patient":
-            window.location.href = "patient_dashboard.html";
-            break;
-        case "staff":
-            window.location.href = "staff_dashboard.html";
-            break;
-        case "admin":
-            window.location.href = "admin_dashboard.html";
-            break;
-        default:
-            alert("Unknown role!");
+    // apiRes expected to be { token, user }
+    if (!apiRes.token || !apiRes.user) {
+        toggleError(emailInput, emailError, true);
+        toggleError(passwordInput, passwordError, true);
+        emailError.textContent = "Invalid server response";
+        return;
     }
+
+    // persist token + user
+    localStorage.setItem("jwtToken", apiRes.token);
+    localStorage.setItem("user", JSON.stringify(apiRes.user));
+
+    // Redirect by role (user.role)
+    const role = apiRes.user.role;
+    if (role === 'patient') window.location.href = 'patient_dashboard.html';
+    else if (role === 'staff') window.location.href = 'staff_dashboard.html';
+    else if (role === 'admin') window.location.href = 'admin_dashboard.html';
+    else alert('Unknown role: ' + role);
 }
 
 
@@ -227,6 +228,9 @@ function addPasswordToggles() {
         });
     });
 }
+
+
+// Note: login is handled by `validateLogin(event)` via the form's onsubmit attribute.
 
 
 // ========================================================
