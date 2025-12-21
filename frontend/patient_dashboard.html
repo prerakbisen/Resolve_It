@@ -371,6 +371,7 @@
 
     </div>
 
+    <script src="auth.js"></script>
     <script>
         // --- Simulated Database (Client-Side Storage) ---
         let patientGrievances = [
@@ -565,35 +566,7 @@
             });
         };
 
-        // Function to handle new submission
-        document.getElementById('grievance-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const newIdNum = patientGrievances.length + 1;
-            const newId = 'HGS-' + String(newIdNum).padStart(3, '0');
-            
-            const newGrievance = {
-                id: newId,
-                subject: document.getElementById('grievance-subject').value,
-                category: document.getElementById('grievance-category').value,
-                date: new Date().toISOString().slice(0, 10),
-                status: 'Pending', // New grievances start as Pending
-                anonymity: document.getElementById('grievance-anonymity').value,
-                log: [{ step: 'Submitted', message: 'Grievance submitted successfully.', timestamp: new Date().toLocaleTimeString() }],
-                images: currentUploadData.slice(),
-                feedback: null
-            };
-
-            patientGrievances.push(newGrievance);
-            // clear current uploads
-            currentUploadData = [];
-            updatePreviews();
-            document.getElementById('upload-error').style.display = 'none';
-            renderGrievanceList();
-            
-            alert(`Grievance ${newId} submitted successfully! Status: Pending.`);
-            this.reset();
-        });
+        
 
         // --- Modal & Status Tracking Functions ---
 
@@ -698,7 +671,7 @@
             });
         };
 
-        const submitFeedback = () => {
+        const submitFeedback = async () => {
             const ratingContainer = document.getElementById('rating-container');
             const rating = parseInt(ratingContainer.dataset.rating);
             const comment = document.getElementById('feedback-comment').value;
@@ -707,31 +680,70 @@
                 alert("Please provide a star rating.");
                 return;
             }
-            
-            const grievanceIndex = patientGrievances.findIndex(g => g.id === currentFeedbackId);
-            if (grievanceIndex !== -1) {
-                // 1. Update status to Closed
-                patientGrievances[grievanceIndex].status = 'Closed';
-                
-                // 2. Store feedback
-                patientGrievances[grievanceIndex].feedback = { rating, comment };
-                
-                // 3. Add log entry
-                patientGrievances[grievanceIndex].log.push({
-                    step: 'Closed',
-                    message: `Closed by reporter with a rating of ${rating} stars.`,
-                    timestamp: new Date().toLocaleTimeString()
-                });
 
-                alert(`Thank you for your feedback! Grievance ${currentFeedbackId} is now Closed.`);
-                
+            try {
+                const payload = `${rating}★ - ${comment}`;
+                const res = await authFetch('http://localhost:8080/api/grievances/' + currentFeedbackId + '/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Feedback failed');
+                alert('Thank you for your feedback!');
                 closeModal('feedback-modal');
-                renderGrievanceList(); // Refresh the table
+                await fetchMyGrievances();
+            } catch (e) {
+                console.error(e);
+                alert('Failed to submit feedback to server.');
             }
         };
 
         // Initial load
-        // Update counters and setup search listener
+        // Backend-powered: load grievances from server
+        async function fetchMyGrievances() {
+            try {
+                const res = await authFetch('http://localhost:8080/api/grievances/mine');
+                if (!res.ok) throw new Error('Failed to fetch');
+                const data = await res.json();
+                // map server data to client shape
+                patientGrievances = data.map(g => ({
+                    id: g.id,
+                    subject: g.title || g.title,
+                    category: (g.description && g.description.split('\n')[0]) || 'General',
+                    date: g.createdAt ? g.createdAt.split('T')[0] : '',
+                    status: g.status || 'Pending',
+                    anonymity: 'No',
+                    log: [],
+                    images: [] ,
+                    feedback: null
+                }));
+                updateCounts();
+                renderGrievanceList();
+            } catch (e) {
+                console.warn('Could not load grievances from server, using local data', e);
+                updateCounts();
+                renderGrievanceList();
+            }
+        }
+
+        async function submitGrievanceToServer(payload) {
+            try {
+                const res = await authFetch('http://localhost:8080/api/grievances', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const text = await res.text().catch(()=>null);
+                    console.error('submitGrievanceToServer failed', res.status, text);
+                    return null;
+                }
+                const data = await res.json();
+                console.log('submitGrievanceToServer ok', data);
+                return data;
+            } catch (e) { console.error(e); return null; }
+        }
+
         function updateCounts() {
             document.getElementById('count-total').textContent = patientGrievances.length;
             document.getElementById('count-pending').textContent = patientGrievances.filter(g=>g.status==='Pending').length;
@@ -741,7 +753,29 @@
         }
 
         document.getElementById('search-input')?.addEventListener('input', () => renderGrievanceList());
-        document.addEventListener('DOMContentLoaded', () => { updateCounts(); renderGrievanceList(); });
+        document.addEventListener('DOMContentLoaded', () => { fetchMyGrievances(); });
+
+        // Replace local submission handler with server-backed call
+        document.getElementById('grievance-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const payload = {
+                title: document.getElementById('grievance-subject').value,
+                description: document.getElementById('grievance-category').value + '\n' + document.getElementById('grievance-details').value
+            };
+
+            const result = await submitGrievanceToServer(payload);
+            if (result) {
+                alert('Grievance submitted (id: ' + result.id + ')');
+                // refresh list
+                await fetchMyGrievances();
+                this.reset();
+                currentUploadData = [];
+                updatePreviews();
+            } else {
+                alert('Failed to submit grievance to server.');
+            }
+        });
     </script>
 </body>
 </html>
