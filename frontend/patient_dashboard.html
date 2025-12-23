@@ -540,7 +540,10 @@
                 
                 let actionButton;
 
-                if (g.status === 'Resolved' && g.feedback === null) {
+                // show feedback button when backend status indicates completion
+                const rawStatus = (g._rawStatus || g.status || '').toString().toUpperCase();
+                const isCompleted = rawStatus === 'COMPLETED' || rawStatus === 'RESOLVED';
+                if (isCompleted && (!g.feedback || g.feedback === null)) {
                     // New Feature: Feedback button for Resolved cases
                     actionButton = `<button onclick="openFeedbackModal('${g.id}')" class="feedback-btn">Rate & Close</button>`;
                 } else if (g.status === 'Closed') {
@@ -705,17 +708,28 @@
                 const res = await authFetch('http://localhost:8080/api/grievances/mine');
                 if (!res.ok) throw new Error('Failed to fetch');
                 const data = await res.json();
-                // map server data to client shape
+                // map server data to client shape and normalize status for display
+                function mapStatus(raw){
+                    if (!raw) return 'Pending';
+                    const s = raw.toString().toUpperCase();
+                    if (s === 'COMPLETED' || s === 'RESOLVED') return 'Resolved';
+                    if (s.includes('IN_REVIEW') || s.includes('IN REVIEW') || s.includes('INVESTIGATING')) return 'In Review';
+                    if (s === 'CLOSED') return 'Closed';
+                    if (s === 'PENDING') return 'Pending';
+                    return raw;
+                }
+
                 patientGrievances = data.map(g => ({
                     id: g.id,
-                    subject: g.title || g.title,
-                    category: (g.description && g.description.split('\n')[0]) || 'General',
+                    subject: g.title || '',
+                    category: g.category || ((g.description && g.description.split('\n')[0]) || 'General'),
                     date: g.createdAt ? g.createdAt.split('T')[0] : '',
-                    status: g.status || 'Pending',
+                    _rawStatus: g.status,
+                    status: mapStatus(g.status),
                     anonymity: 'No',
                     log: [],
                     images: [] ,
-                    feedback: null
+                    feedback: g.feedback || null
                 }));
                 updateCounts();
                 renderGrievanceList();
@@ -753,7 +767,11 @@
         }
 
         document.getElementById('search-input')?.addEventListener('input', () => renderGrievanceList());
-        document.addEventListener('DOMContentLoaded', () => { fetchMyGrievances(); });
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchMyGrievances();
+            // refresh periodically so status updates by staff/admin are reflected
+            setInterval(fetchMyGrievances, 10000);
+        });
 
         // Replace local submission handler with server-backed call
         document.getElementById('grievance-form').addEventListener('submit', async function(e) {

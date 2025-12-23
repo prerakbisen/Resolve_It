@@ -213,6 +213,7 @@
         .status-pending { background-color: #f39c12; }
         .status-resolved { background-color: #2ecc71; }
         .status-in-review { background-color: #3498db; }
+        .status-investigating { background-color: #9b59b6; }
         
         /* --- Media Queries (Responsiveness) --- */
         @media (max-width: 768px) {
@@ -281,6 +282,63 @@
         </ul>
     </div>
 
+    <script src="auth.js"></script>
+    <script>
+        async function loadAdminGrievances(){
+            try{
+                const res = await authFetch('http://localhost:8080/api/grievances');
+                if(!res.ok) throw new Error('Failed');
+                const data = await res.json();
+                const tbody = document.querySelector('.grievance-section tbody');
+                tbody.innerHTML = '';
+                data.forEach(g => {
+                                        const tr = document.createElement('tr');
+                                        const status = (g.status || 'PENDING').toString().toUpperCase();
+                                        const displayStatus = status === 'IN_REVIEW' ? 'In Review' : status === 'INVESTIGATING' ? 'Investigating' : status === 'RESOLVED' ? 'Resolved' : status === 'PENDING' ? 'Pending' : status;
+                                        tr.innerHTML = `
+                                                <td>${g.id}</td>
+                                                <td>${g.title || ''}</td>
+                                                <td>${g.user ? g.user.name || g.user.email : ''}</td>
+                                                <td>${g.user ? g.user.role : ''}</td>
+                                                <td>${g.createdAt ? g.createdAt.split('T')[0] : ''}</td>
+                                                <td><span class="status-${status.toLowerCase().replace(/_/g,'-')} status-tag">${displayStatus}</span></td>
+                                                <td>${g.feedback ? (g.feedback.length>60 ? g.feedback.substring(0,60)+'...' : g.feedback) : '-'}</td>
+                                                <td>
+                                                    <select data-id="${g.id}" class="status-select">
+                                                        <option value="PENDING">Pending</option>
+                                                        <option value="IN_REVIEW">In Review</option>
+                                                        <option value="INVESTIGATING">Investigating</option>
+                                                        <option value="RESOLVED">Resolved</option>
+                                                    </select>
+                                                    <button class="update-status">Update</button>
+                                                </td>
+                                        `;
+                    tbody.appendChild(tr);
+                                        // set the select to current status code
+                                        const sel = tr.querySelector('.status-select');
+                                        if (sel) sel.value = status;
+                });
+
+                document.querySelectorAll('.update-status').forEach(btn=>{
+                    btn.addEventListener('click', async (ev)=>{
+                        const sel = ev.target.previousElementSibling;
+                        const id = sel.getAttribute('data-id');
+                        const status = sel.value;
+                        try{
+                            const r = await authFetch('http://localhost:8080/api/grievances/'+id+'/status?status='+encodeURIComponent(status), { method: 'PUT' });
+                            if(!r.ok){ const t = await r.text().catch(()=>null); throw new Error(r.status+' '+t); }
+                            alert('Updated');
+                            await loadAdminGrievances();
+                        }catch(e){ console.error(e); alert('Update failed: '+e.message); }
+                    });
+                });
+
+            }catch(e){ console.error('loadAdminGrievances', e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadAdminGrievances);
+    </script>
+
     <div class="main-content">
         
         <div class="header">
@@ -346,53 +404,14 @@
                         <th>Role</th>
                         <th>Date</th>
                         <th>Status</th>
+                        <th>Feedback</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>HGS-0128</td>
-                        <td>Issue with Billing Department</td>
-                        <td>Patient A</td>
-                        <td>Patient</td>
-                        <td>2025-11-20</td>
-                        <td><span class="status-pending status-tag">Pending</span></td>
-                    </tr>
-                    <tr>
-                        <td>HGS-0127</td>
-                        <td>Lack of medical supplies</td>
-                        <td>Staff B</td>
-                        <td>Staff</td>
-                        <td>2025-11-19</td>
-                        <td><span class="status-resolved status-tag">Resolved</span></td>
-                    </tr>
-                    <tr>
-                        <td>HGS-0126</td>
-                        <td>Cleanliness in common area</td>
-                        <td>Patient C</td>
-                        <td>Patient</td>
-                        <td>2025-11-18</td>
-                        <td><span class="status-in-review status-tag">In Review</span></td>
-                    </tr>
-                    <tr>
-                        <td>HGS-0125</td>
-                        <td>Scheduling Conflict</td>
-                        <td>Staff D</td>
-                        <td>Staff</td>
-                        <td>2025-11-17</td>
-                        <td><span class="status-resolved status-tag">Resolved</span></td>
-                    </tr>
-                    <tr>
-                        <td>HGS-0124</td>
-                        <td>Nurse Attentiveness</td>
-                        <td>Patient E</td>
-                        <td>Patient</td>
-                        <td>2025-11-16</td>
-                        <td><span class="status-in-review status-tag">In Review</span></td>
-                    </tr>
                 </tbody>
             </table>
         </div>
-
     </div>
 
 </body>

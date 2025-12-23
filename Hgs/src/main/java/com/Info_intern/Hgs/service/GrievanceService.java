@@ -50,7 +50,7 @@ public class GrievanceService {
         g.setStatus(status);
         Grievance saved = grievanceRepository.save(g);
 
-        if ("COMPLETED".equalsIgnoreCase(status)) {
+        if ("COMPLETED".equalsIgnoreCase(status) || "RESOLVED".equalsIgnoreCase(status)) {
             // notify user and admins
             String subject = "Grievance Resolved: " + g.getTitle();
             String text = "Your grievance with id " + g.getId() + " has been marked as completed.";
@@ -74,6 +74,11 @@ public class GrievanceService {
         f.setUser(user);
         f.setComment(comment);
         Feedback saved = feedbackRepository.save(f);
+
+        // attach feedback summary to grievance for quick access
+        g.setFeedback(comment);
+        g.setFeedbackGiven(true);
+        grievanceRepository.save(g);
 
         // notify admins and staff
         String subject = "New feedback for grievance: " + g.getId();
