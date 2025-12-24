@@ -56,7 +56,7 @@ Backend is built with **Java 25 (JDK 25)** and **Spring Boot 4.0.0**, while the 
 
 ### Database
 ```sql
-CREATE DATABASE grievance_system;
+CREATE DATABASE hgs_db;
 ```
 ### Configuration (application.properties)
 ```
