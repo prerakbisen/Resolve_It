@@ -510,7 +510,12 @@ body {
 
         function updatePreviews() {
             const container = document.getElementById('image-previews');
-            container.innerHTML = '';
+            if (container) {
+                container.innerHTML = '';
+            } else {
+                console.warn('updatePreviews: #image-previews element not found');
+                return;
+            }
             currentUploadData.forEach((data, idx) => {
                 const div = document.createElement('div');
                 div.className = 'thumb';
@@ -565,7 +570,7 @@ body {
             }
             // read files
             try {
-                const datas = await Promise.all(justImages.map(f => readFileAsDataURL(f)));
+                const datas = await Promise.all(justImages.map(f => readFileAsDataURL(f, 1200, 0.75)));
                 currentUploadData.push(...datas);
                 updatePreviews();
             } catch (e) {
@@ -574,11 +579,34 @@ body {
             }
         }
 
-        // Read a File to dataURL, returns a Promise
-        function readFileAsDataURL(file) {
+        // Read image File and resize to reduce payload. Returns dataURL.
+        function readFileAsDataURL(file, maxWidth = 1200, quality = 0.75) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // if image smaller than maxWidth, keep original dimensions
+                        const ratio = img.width > maxWidth ? (maxWidth / img.width) : 1;
+                        const w = Math.round(img.width * ratio);
+                        const h = Math.round(img.height * ratio);
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        // export as jpeg to reduce size
+                        try {
+                            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                            resolve(dataUrl);
+                        } catch (e) {
+                            // fallback to original data
+                            resolve(reader.result);
+                        }
+                    };
+                    img.onerror = () => resolve(reader.result);
+                    img.src = reader.result;
+                };
                 reader.onerror = reject;
                 reader.readAsDataURL(file);
             });
@@ -588,6 +616,10 @@ body {
         
         function renderGrievanceList() {
             const listBody = document.getElementById('my-grievance-list');
+            if (!listBody) {
+                console.warn('renderGrievanceList: #my-grievance-list element not found');
+                return;
+            }
             listBody.innerHTML = '';
             
             // Apply search filter
@@ -663,7 +695,11 @@ body {
             
             // 1. Render Communication Log
             const logElement = document.getElementById('communication-log');
-            logElement.innerHTML = '';
+            if (logElement) {
+                logElement.innerHTML = '';
+            } else {
+                console.warn('openStatusModal: #communication-log not found');
+            }
             // Use reverse() to show latest message first in the log view
             grievance.log.slice().reverse().forEach(item => {
                 const line = document.createElement('p');
@@ -675,21 +711,37 @@ body {
             
             // 2. Render Timeline (Enhanced Feature)
             const timelineElement = document.getElementById('timeline');
-            timelineElement.innerHTML = '';
+            if (timelineElement) {
+                timelineElement.innerHTML = '';
+            } else {
+                console.warn('openStatusModal: #timeline not found');
+            }
             
             // Map display status to timeline step
 function mapStatusToTimelineStep(status) {
     if (!status) return 'Submitted';
 
-    const s = status.toLowerCase();
+    switch (status) {
+        case 'Pending':
+            return 'Submitted';
 
-    if (s === 'pending') return 'Submitted';
-    if (s === 'in review') return 'Investigating';
-    if (s === 'resolved') return 'Resolved';
-    if (s === 'closed') return 'Closed';
+        case 'In Review':
+            return 'Assigned';
 
-    return 'Submitted';
+        case 'Investigating':
+            return 'Investigating';
+
+        case 'Resolved':
+            return 'Resolved';
+
+        case 'Closed':
+            return 'Closed';
+
+        default:
+            return 'Submitted';
+    }
 }
+
 
 const activeStep = mapStatusToTimelineStep(grievance.status);
 const currentStepIndex = timelineSteps.indexOf(activeStep);
@@ -715,9 +767,16 @@ const currentStepIndex = timelineSteps.indexOf(activeStep);
                 imgContainer.style.marginTop = '12px';
                 imgContainer.style.display = 'flex';
                 imgContainer.style.gap = '8px';
-                document.getElementById('communication-log').parentNode.insertBefore(imgContainer, document.getElementById('communication-log').nextSibling);
+                const commLogEl = document.getElementById('communication-log');
+                if (commLogEl && commLogEl.parentNode) {
+                    commLogEl.parentNode.insertBefore(imgContainer, commLogEl.nextSibling);
+                } else {
+                    const modalContent = document.querySelector('#status-modal .modal-content');
+                    if (modalContent) modalContent.appendChild(imgContainer);
+                    else document.body.appendChild(imgContainer);
+                }
             }
-            imgContainer.innerHTML = '';
+            if (imgContainer) imgContainer.innerHTML = '';
             if (grievance.images && grievance.images.length) {
                 grievance.images.forEach((src, idx) => {
                     const thumb = document.createElement('div');
@@ -814,14 +873,34 @@ const currentStepIndex = timelineSteps.indexOf(activeStep);
                 const data = await res.json();
                 // map server data to client shape and normalize status for display
                 function mapStatus(raw){
-                    if (!raw) return 'Pending';
-                    const s = raw.toString().toUpperCase();
-                    if (s === 'COMPLETED' || s === 'RESOLVED') return 'Resolved';
-                    if (s.includes('IN_REVIEW') || s.includes('IN REVIEW') || s.includes('INVESTIGATING')) return 'In Review';
-                    if (s === 'CLOSED') return 'Closed';
-                    if (s === 'PENDING') return 'Pending';
-                    return raw;
-                }
+    if (!raw) return 'Pending';
+
+    const s = raw.toString().trim().toUpperCase();
+
+    switch (s) {
+        case 'PENDING':
+            return 'Pending';
+
+        case 'IN_REVIEW':
+        case 'IN REVIEW':
+            return 'In Review';
+
+        case 'INVESTIGATING':
+            return 'Investigating';
+
+        case 'RESOLVED':
+        case 'COMPLETED':
+            return 'Resolved';
+
+        case 'CLOSED':
+            return 'Closed';
+
+        default:
+            return 'Pending';
+    }
+}
+
+
 
                 patientGrievances = data.map(g => ({
                     id: g.id,
@@ -832,7 +911,7 @@ const currentStepIndex = timelineSteps.indexOf(activeStep);
                     status: mapStatus(g.status),
                     anonymity: 'No',
                     log: [],
-                    images: [] ,
+                    images: g.images || [],
                     feedback: g.feedback || null
                 }));
                 updateCounts();
@@ -853,13 +932,14 @@ const currentStepIndex = timelineSteps.indexOf(activeStep);
                 });
                 if (!res.ok) {
                     const text = await res.text().catch(()=>null);
+                    const msg = `Server returned ${res.status} ${text || ''}`;
                     console.error('submitGrievanceToServer failed', res.status, text);
-                    return null;
+                    throw new Error(msg);
                 }
                 const data = await res.json();
                 console.log('submitGrievanceToServer ok', data);
                 return data;
-            } catch (e) { console.error(e); return null; }
+            } catch (e) { console.error(e); throw e; }
         }
 
         function updateCounts() {
@@ -895,6 +975,10 @@ const currentStepIndex = timelineSteps.indexOf(activeStep);
         // render recent activity from patientGrievances logs
         function renderRecentActivity(){
             const container = document.getElementById('recent-activity');
+            if (!container) {
+                console.warn('renderRecentActivity: #recent-activity not found');
+                return;
+            }
             container.innerHTML = '';
             const items = [];
             patientGrievances.forEach(g => {
@@ -942,19 +1026,20 @@ const currentStepIndex = timelineSteps.indexOf(activeStep);
             const payload = {
                 title: document.getElementById('grievance-subject').value,
                 category: document.getElementById('grievance-category').value,
-                description: document.getElementById('grievance-details').value
+                description: document.getElementById('grievance-details').value,
+                images: currentUploadData
             };
 
-            const result = await submitGrievanceToServer(payload);
-            if (result) {
+            try {
+                const result = await submitGrievanceToServer(payload);
                 alert('Grievance submitted (id: ' + result.id + ')');
-                // refresh list
                 await fetchMyGrievances();
                 this.reset();
                 currentUploadData = [];
                 updatePreviews();
-            } else {
-                alert('Failed to submit grievance to server.');
+            } catch (err) {
+                console.error('Submit failed', err);
+                alert('Failed to submit grievance: ' + (err && err.message ? err.message : 'Unknown error'));
             }
         });
     </script>
