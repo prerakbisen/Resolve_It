@@ -3,6 +3,7 @@ async function authFetch(url, opts = {}) {
   const token = localStorage.getItem('jwtToken');
   opts.headers = opts.headers || {};
   if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  else console.warn('authFetch: no jwtToken found in localStorage');
   return fetch(url, opts);
 }
 
