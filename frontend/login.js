@@ -239,4 +239,89 @@ function addPasswordToggles() {
 document.addEventListener('DOMContentLoaded', () => {
     showForm('login');
     addPasswordToggles();
+    initForgotPassword();
 });
+
+
+// ========================================================
+// FORGOT PASSWORD FLOW
+// ========================================================
+function initForgotPassword() {
+    const forgotLink = document.getElementById('forgot-link');
+    const modal = document.getElementById('forgot-modal');
+    const closeBtn = document.getElementById('fp-close');
+    const sendOtpBtn = document.getElementById('fp-send-otp');
+    const backBtn = document.getElementById('fp-back');
+    const resetBtn = document.getElementById('fp-reset');
+
+    const requestForm = document.getElementById('forgot-request-form');
+    const resetForm = document.getElementById('forgot-reset-form');
+
+    forgotLink?.addEventListener('click', (e) => {
+        e.preventDefault();
+        modal.classList.remove('hidden');
+        requestForm.classList.remove('hidden');
+        resetForm.classList.add('hidden');
+    });
+
+    closeBtn?.addEventListener('click', () => modal.classList.add('hidden'));
+
+    sendOtpBtn?.addEventListener('click', async () => {
+        const identifier = document.getElementById('fp-identifier').value.trim();
+        if (!identifier) return alert('Enter email or phone');
+
+        try {
+            const res = await fetch('http://localhost:8080/api/auth/forgot/request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier })
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                return alert('Error: ' + txt);
+            }
+
+            alert('OTP sent (check email or developer logs for phone OTP)');
+            requestForm.classList.add('hidden');
+            resetForm.classList.remove('hidden');
+        } catch (err) {
+            console.error('Send OTP error', err);
+            alert('Failed to send OTP');
+        }
+    });
+
+    backBtn?.addEventListener('click', () => {
+        requestForm.classList.remove('hidden');
+        resetForm.classList.add('hidden');
+    });
+
+    resetBtn?.addEventListener('click', async () => {
+        const identifier = document.getElementById('fp-identifier').value.trim();
+        const otp = document.getElementById('fp-otp').value.trim();
+        const newPassword = document.getElementById('fp-new-password').value;
+        const confirm = document.getElementById('fp-confirm-password').value;
+
+        if (!otp || !newPassword || !confirm) return alert('Fill all fields');
+        if (newPassword !== confirm) return alert('Passwords do not match');
+
+        try {
+            const res = await fetch('http://localhost:8080/api/auth/forgot/reset', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier, otp, newPassword })
+            });
+
+            if (!res.ok) {
+                const txt = await res.text();
+                return alert('Error: ' + txt);
+            }
+
+            alert('Password reset successful. Please login with your new password.');
+            modal.classList.add('hidden');
+        } catch (err) {
+            console.error('Reset error', err);
+            alert('Failed to reset password');
+        }
+    });
+}

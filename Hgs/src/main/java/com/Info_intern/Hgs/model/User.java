@@ -28,4 +28,12 @@ public class User {
 
     @Column(nullable = false)
     private String role;  // admin/patient/staff
+
+    // OTP for forgot-password flow (nullable)
+    @Column
+    private String otp;
+
+    // expiry time in epoch millis for OTP
+    @Column
+    private Long otpExpiry;
 }
