@@ -1,22 +1,24 @@
-# ---------- BUILD STAGE ----------
+# -------- BUILD STAGE --------
 FROM eclipse-temurin:25-jdk AS build
 
 WORKDIR /build
-
 COPY . .
 
 RUN chmod +x mvnw
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw -B package -DskipTests
 
-# ---------- RUN STAGE ----------
+# Debug: show what was built
+RUN echo "==== TARGET CONTENT ====" && ls -lah target
+
+# -------- RUN STAGE --------
 FROM eclipse-temurin:25-jre
 
 WORKDIR /app
 
-# Copy the actual built JAR
-COPY --from=build /build/target/*.jar /app/app.jar
+# Copy the JAR that Spring Boot actually created
+COPY --from=build /build/target/*.jar app.jar
 
-ENV PORT=8080
 EXPOSE 8080
+ENV PORT=8080
 
-CMD ["sh", "-c", "java -jar /app/app.jar"]
+CMD ["sh", "-c", "java -jar app.jar"]
