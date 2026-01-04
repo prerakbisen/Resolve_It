@@ -6,6 +6,8 @@ import com.Info_intern.Hgs.service.GrievanceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.Principal;
 import java.util.List;
@@ -17,6 +19,8 @@ public class GrievanceController {
 
     @Autowired
     private GrievanceService grievanceService;
+
+    private final Logger logger = LoggerFactory.getLogger(GrievanceController.class);
 
     @PostMapping
     @PreAuthorize("hasAuthority('patient')")
@@ -48,8 +52,18 @@ public class GrievanceController {
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('staff') or hasAuthority('admin')")
-    public Grievance updateStatus(@PathVariable Long id, @RequestParam String status) {
-        return grievanceService.updateStatus(id, status);
+    public org.springframework.http.ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestParam String status, Principal principal) {
+        logger.info("Received status update request: id={}, status={}, principal={}.", id, status, principal==null?null:principal.getName());
+        try {
+            Grievance updated = grievanceService.updateStatus(id, status);
+            return org.springframework.http.ResponseEntity.ok(updated);
+        } catch (RuntimeException ex) {
+            logger.warn("Failed to update grievance status: {}", ex.getMessage());
+            return org.springframework.http.ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            logger.error("Error updating grievance status", ex);
+            return org.springframework.http.ResponseEntity.status(500).body("Server error");
+        }
     }
 
     @PostMapping("/{id}/feedback")

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -40,4 +42,9 @@ public class Grievance {
     private User user; // who submitted
 
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "grievance_images", joinColumns = @JoinColumn(name = "grievance_id"))
+    @Column(name = "image_data", columnDefinition = "TEXT")
+    private List<String> images = new ArrayList<>();
 }

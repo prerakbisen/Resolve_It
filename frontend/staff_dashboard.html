@@ -22,7 +22,7 @@
 
         /* --- Sidebar Navigation --- */
         .sidebar {
-            width: 200px; /* Slightly narrower than Admin for simplicity */
+            width: 250px; 
             background-color: #2c3e50;
             color: white;
             padding-top: 20px;
@@ -31,10 +31,21 @@
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
 
+        #myVideo {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -11;
+    pointer-events: none;
+}
+
         .sidebar h2 {
             text-align: center;
             margin-bottom: 30px;
-            font-size: 20px;
+            font-size: 25px;
             color: #2ecc71;
             font-weight: bold;
         }
@@ -63,13 +74,13 @@
         }
         
         .sidebar a:hover, .sidebar a.active {
-            background-color: #34495e;
+            background-color: #65bc2738;
             color: #2ecc71;
         }
 
         /* --- Main Content Area --- */
         .main-content {
-            margin-left: 200px; 
+            margin-left: 250px; 
             flex-grow: 1;
             padding: 20px;
         }
@@ -92,6 +103,8 @@
             font-size: 22px;
             font-weight: 600;
         }
+        .logout-btn { display:inline-block; padding:8px 12px; border-radius:6px; color:#666; text-decoration:none; border:1px solid #ddd; background:transparent; }
+        .logout-btn:hover{ background:#2ecc71; color:#fff; border-color:#2ecc71; }
         
         /* --- Widgets (KPIs) --- */
         .widgets-grid {
@@ -128,6 +141,24 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
+        /* Toolbar (admin-like) */
+        .toolbar {
+            display:flex;
+            gap:10px;
+            align-items:center;
+            margin: 12px 0 18px 0;
+            flex-wrap:wrap;
+        }
+        .toolbar .search {
+            flex:1;
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+        .toolbar input, .toolbar select { padding:8px 10px; border-radius:8px; border:1px solid #ddd; }
+        .small-btn { padding:6px 10px; border-radius:8px; border:none; cursor:pointer; }
+        .small-btn.gray { background:#eef0f2; color:#333; border:1px solid #ddd; }
+
         .grievance-table {
             width: 100%;
             border-collapse: collapse;
@@ -158,6 +189,9 @@
 
         .status-pending { background-color: #f39c12; }
         .status-in-review { background-color: #3498db; }
+        .status-investigating { background-color: #9b59b6; }
+        .status-resolved { background-color: #2ecc71; }
+        .status-closed { background: #ff0000; }
         
         .action-button {
             padding: 6px 10px;
@@ -203,17 +237,168 @@
             margin-top: 10px;
         }
         
-        @media (max-width: 600px) {
-            .sidebar { width: 100%; height: auto; position: relative; }
-            .main-content { margin-left: 0; padding-top: 0; }
-            .widgets-grid { grid-template-columns: 1fr; }
-        }
+        /* ================= RESPONSIVE UPGRADE ================= */
+
+/* Tablets */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 180px;
+    }
+    .main-content {
+        margin-left: 180px;
+        padding: 16px;
+    }
+    .header h1 {
+        font-size: 20px;
+    }
+    .widget-content p {
+        font-size: 24px;
+    }
+}
+
+/* Mobile & Small Tablets */
+@media (max-width: 768px) {
+
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding: 10px 0;
+    }
+
+    .sidebar h2 {
+        margin: 0;
+        font-size: 16px;
+    }
+
+    .sidebar ul {
+        display: flex;
+        gap: 10px;
+    }
+
+    .sidebar li {
+        list-style: none;
+    }
+
+    .sidebar a {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .sidebar a svg {
+        width: 14px;
+        height: 14px;
+        margin-right: 6px;
+    }
+
+    .main-content {
+        margin-left: 0;
+        padding: 12px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .widgets-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbar .search {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .grievance-table th,
+    .grievance-table td {
+        font-size: 12px;
+        padding: 8px;
+    }
+
+    .task-section {
+        padding: 14px;
+    }
+}
+
+/* ================= STAFF DASHBOARD TABLE RESPONSIVE ================= */
+
+/* Tablets */
+@media (max-width: 900px) {
+    .grievance-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    .grievance-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+    .grievance-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+
+/* Very Small Phones */
+@media (max-width: 420px) {
+
+    .sidebar ul {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .sidebar a span {
+        display: none; /* icons only on very small screens */
+    }
+
+    .header h1 {
+        font-size: 18px;
+    }
+
+    .widget-content p {
+        font-size: 22px;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+}
+
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>HGS Staff</h2>
+        <video autoplay muted loop playsinline preload="auto" id="myVideo">
+        <source src="login bg video.mp4" type="video/mp4">
+    </video>
         <ul>
             <li>
                 <a href="#" class="active">
@@ -236,13 +421,15 @@
         </ul>
     </div>
 
+    <script src="auth.js"></script>
+
     <div class="main-content">
         
         <div class="header">
             <h1>Staff Dashboard</h1>
-            <div style="font-size: 14px;">
+            <div style="font-size: 14px; display:flex; align-items:center; gap:12px;">
                 <span>Welcome, Jane Doe (Staff)</span>
-                <a href="index.html" style="color: #666; text-decoration: none; margin-left: 15px;">Logout</a>
+                <a href="home.html" class="logout-btn">Logout</a>
             </div>
         </div>
 
@@ -251,27 +438,43 @@
             <div class="widget" style="border-left: 5px solid #f39c12;">
                 <div class="widget-content">
                     <h3>Pending Cases</h3>
-                    <p>12</p>
+                    <p><span id="stat-pending-cases">0</span></p>
                 </div>
             </div>
 
             <div class="widget" style="border-left: 5px solid #2ecc71;">
                 <div class="widget-content">
                     <h3>Resolved This Month</h3>
-                    <p>38</p>
+                    <p><span id="stat-resolved-month">0</span></p>
                 </div>
             </div>
 
             <div class="widget" style="border-left: 5px solid #e74c3c;">
                 <div class="widget-content">
                     <h3>Due This Week</h3>
-                    <p style="color: #e74c3c;">4</p>
+                    <p style="color: #e74c3c;"><span id="stat-due-week">0</span></p>
                 </div>
             </div>
         </div>
 
         <div class="task-section">
             <h2>My Active Grievance Queue</h2>
+            <div class="toolbar">
+                <div class="search">
+                    <input id="staff-search" type="search" placeholder="Search by id, subject or category...">
+                    <select id="staff-status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="IN_REVIEW">In Review</option>
+                        <option value="INVESTIGATING">Investigating</option>
+                        <option value="RESOLVED">Resolved</option>
+                        <option value="CLOSED">Closed</option>
+                    </select>
+                </div>
+                <div class="actions">
+                    <button id="staff-refresh" class="small-btn gray">Refresh</button>
+                </div>
+            </div>
             <table class="grievance-table">
                 <thead>
                     <tr>
@@ -299,11 +502,15 @@
             <p><strong>Details:</strong> <span id="modal-grievance-details"></span></p>
             <hr>
 
+            <div id="modal-images" style="display:flex; gap:8px; margin:12px 0; flex-wrap:wrap;"></div>
+
             <label for="new-status">Update Status:</label>
             <select id="new-status">
-                <option value="In Review">In Review</option>
-                <option value="Investigating">Investigating</option>
-                <option value="Resolved">Resolved</option>
+                <option value="PENDING">Pending</option>
+                <option value="IN_REVIEW">In Review</option>
+                <option value="INVESTIGATING">Investigating</option>
+                <option value="RESOLVED">Resolved</option>
+                
             </select>
             
             <label for="internal-notes">Internal Investigation Notes (S-03):</label>
@@ -322,14 +529,8 @@
 
 
     <script>
-        // Simulated Database for Staff's Assigned Cases
-        let staffCases = [
-            { id: 'HGS-0130', subject: 'Late medication delivery', category: 'Care Quality', priority: 'High', status: 'Pending', dueDate: '2025-12-05', details: 'Patient reported medication was delivered 3 hours late.' },
-            { id: 'HGS-0129', subject: 'Equipment maintenance needed', category: 'Facilities', priority: 'Medium', status: 'In Review', dueDate: '2025-12-10', details: 'MRI machine seems to be making strange noises. Need engineering review.' },
-            { id: 'HGS-0128', subject: 'Issue with Billing Department', category: 'Billing', priority: 'Low', status: 'Pending', dueDate: '2025-12-15', details: 'Patient double-charged for a procedure.' },
-            { id: 'HGS-0127', subject: 'Lack of medical supplies', category: 'Operational', priority: 'High', status: 'In Review', dueDate: '2025-12-03', details: 'The ward is currently short on gloves and protective gowns.' },
-            // Add more simulated data here...
-        ];
+        // backend-driven cases
+        let staffCases = [];
 
         let currentCaseId = null;
 
@@ -337,30 +538,114 @@
         
         const renderCaseList = () => {
             const listBody = document.getElementById('staff-grievance-list');
+            if (!listBody) { console.warn('renderCaseList: #staff-grievance-list not found'); return; }
             listBody.innerHTML = '';
-            
-            staffCases.forEach(g => {
-                const statusClass = g.status.toLowerCase().replace(' ', '-');
+            const q = (document.getElementById('staff-search')?.value || '').toLowerCase().trim();
+            const statusFilter = (document.getElementById('staff-status-filter')?.value || '').toUpperCase();
+
+            const filtered = staffCases.filter(g => {
+                const matchesQuery = !q || (''+g.id).includes(q) || (g.title||'').toLowerCase().includes(q) || (g.category||'').toLowerCase().includes(q) || (g.details||'').toLowerCase().includes(q);
+                const matchesStatus = !statusFilter || (g.status||'').toString().toUpperCase() === statusFilter;
+                return matchesQuery && matchesStatus;
+            });
+
+            filtered.forEach(g => {
+                const raw = (g.status || '').toString().toUpperCase();
+                const statusClass = raw.toLowerCase().replace(/_/g, '-').replace(' ', '-');
+                const displayStatus = raw === 'IN_REVIEW' ? 'In Review' : raw === 'INVESTIGATING' ? 'Investigating' : raw === 'RESOLVED' ? 'Resolved' : raw === 'CLOSED' ? 'Closed' : raw === 'PENDING' ? 'Pending' : raw;
                 const row = listBody.insertRow();
-                
                 let dueDateText = g.dueDate;
-                if (g.status !== 'Resolved' && new Date(g.dueDate) < new Date()) {
+                if (raw !== 'RESOLVED' && raw !== 'CLOSED' && g.dueDate && new Date(g.dueDate) < new Date()) {
                     dueDateText = `<span style="color: red; font-weight: bold;">${g.dueDate} (OVERDUE)</span>`;
                 }
 
                 row.innerHTML = `
                     <td>${g.id}</td>
-                    <td>${g.subject}</td>
-                    <td>${g.category}</td>
-                    <td><span style="color: ${g.priority === 'High' ? 'red' : g.priority === 'Medium' ? 'orange' : 'green'}; font-weight: bold;">${g.priority}</span></td>
-                    <td><span class="status-tag status-${statusClass}">${g.status}</span></td>
-                    <td>${dueDateText}</td>
-                    <td>
-                        <button onclick="openResolutionModal('${g.id}')" class="action-button">Resolve Case</button>
-                    </td>
+                    <td>${g.title || g.subject || ''} ${g.images && g.images.length ? `<div style="font-size:12px;color:#666; margin-top:6px;">Images: ${g.images.length}</div>` : ''}</td>
+                    <td>${g.category || ''}</td>
+                    <td>${g.priority || ''}</td>
+                    <td><span class="status-tag status-${statusClass}">${displayStatus}</span></td>
+                        <td>${dueDateText || ''}</td>
+                        <td>
+                            ${raw === 'CLOSED' ? (g.feedback ? `<div style="font-size:13px;color:#333;">${(g.feedback.length>100? g.feedback.substring(0,100)+'...': g.feedback)}</div>` : '<div style="color:#777;">No feedback</div>') : `<button onclick="openResolutionModal(${g.id})" class="action-button">Resolve Case</button>`}
+                        </td>
                 `;
             });
         };
+
+        async function loadStaffCases() {
+            try {
+                const res = await authFetch('http://localhost:8080/api/grievances');
+                if (!res.ok) {
+                    const t = await res.text().catch(()=>null);
+                    console.error('loadStaffCases: fetch failed', res.status, t);
+                    throw new Error('Failed to fetch: '+res.status);
+                }
+                const data = await res.json();
+                console.log('loadStaffCases: fetched', data && data.length ? data.length + ' grievances' : 'no grievances', data && data[0] ? { sample: data[0], sampleImages: (data[0].images || []).slice(0,3)} : null);
+                // map to UI shape
+                // map to UI shape and compute a due date (createdAt + 7 days) for SLA
+                staffCases = data.map(g => {
+                    const created = g.createdAt ? new Date(g.createdAt) : null;
+                    let due = '';
+                    if (created) {
+                        const d = new Date(created.getTime());
+                        d.setDate(d.getDate() + 7);
+                        due = d.toISOString().split('T')[0];
+                    }
+                    return {
+                        id: g.id,
+                        title: g.title,
+                        category: g.category,
+                        status: (g.status || 'PENDING').toString().toUpperCase(),
+                        details: g.description || '',
+                        createdAt: g.createdAt || '',
+                        dueDate: due,
+                        feedback: g.feedback || null,
+                        images: g.images || []
+                    };
+                });
+
+                // populate widget stats
+                try {
+                    const now = new Date();
+                    const startOfWeek = new Date(now);
+                    startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+                    startOfWeek.setHours(0,0,0,0);
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 6);
+                    endOfWeek.setHours(23,59,59,999);
+
+                    const pendingCount = staffCases.filter(x => (x.status||'').toUpperCase() === 'PENDING').length;
+                    const resolvedMonthCount = staffCases.filter(x => {
+                        if ((x.status||'').toUpperCase() !== 'RESOLVED') return false;
+                        if (!x.createdAt) return false;
+                        const parts = x.createdAt.split('T')[0].split('-');
+                        if (parts.length < 2) return false;
+                        const y = parseInt(parts[0],10), m = parseInt(parts[1],10);
+                        const nowD = new Date();
+                        return y === nowD.getFullYear() && m === nowD.getMonth()+1;
+                    }).length;
+
+                    const dueThisWeek = staffCases.filter(x => {
+                        if (!x.dueDate) return false;
+                        const d = new Date(x.dueDate + 'T00:00:00');
+                        if (d < startOfWeek || d > endOfWeek) return false;
+                        const s = (x.status||'').toUpperCase();
+                        return s !== 'RESOLVED' && s !== 'CLOSED';
+                    }).length;
+
+                    const el = id => document.getElementById(id);
+                    if (el('stat-pending-cases')) el('stat-pending-cases').textContent = pendingCount;
+                    if (el('stat-resolved-month')) el('stat-resolved-month').textContent = resolvedMonthCount;
+                    if (el('stat-due-week')) el('stat-due-week').textContent = dueThisWeek;
+                } catch(e) { console.warn('stats compute error', e); }
+
+                renderCaseList();
+            } catch (e) {
+                console.error('loadStaffCases error', e);
+            }
+        }
 
         // --- Modal Functions (S-03, S-04, S-05) ---
 
@@ -370,21 +655,35 @@
 
             currentCaseId = id;
             document.getElementById('modal-grievance-id').textContent = id;
-            document.getElementById('modal-grievance-subject').textContent = caseData.subject;
+            document.getElementById('modal-grievance-subject').textContent = caseData.title || caseData.subject || '';
             document.getElementById('modal-grievance-details').textContent = caseData.details;
             
-            // Set initial status in the dropdown
-            document.getElementById('new-status').value = caseData.status;
+            // Set initial status in the dropdown (status codes are uppercase)
+            const ns = document.getElementById('new-status');
+            ns.value = (caseData.status || 'PENDING').toString().toUpperCase();
 
             // Show/Hide Public Resolution Summary based on selected status
             const statusSelect = document.getElementById('new-status');
             const summaryArea = document.getElementById('resolution-summary-area');
 
             statusSelect.onchange = function() {
-                summaryArea.style.display = (this.value === 'Resolved') ? 'block' : 'none';
+                summaryArea.style.display = (this.value === 'RESOLVED' || this.value === 'CLOSED') ? 'block' : 'none';
             };
             // Trigger the change handler once on load
             statusSelect.onchange(); 
+
+            // render images if present
+            const imgContainer = document.getElementById('modal-images');
+            if (imgContainer) imgContainer.innerHTML = '';
+            if (caseData.images && caseData.images.length) {
+                caseData.images.forEach(src => {
+                    const tn = document.createElement('div'); tn.style.width='120px'; tn.style.height='80px'; tn.style.overflow='hidden'; tn.style.border='1px solid #eee'; tn.style.borderRadius='6px'; tn.style.cursor='pointer';
+                    const im = document.createElement('img'); im.src = src; im.style.width='100%'; im.style.height='100%'; im.style.objectFit='cover';
+                    tn.appendChild(im);
+                    tn.addEventListener('click', ()=> window.open(src));
+                    imgContainer.appendChild(tn);
+                });
+            }
 
             document.getElementById('resolution-modal').style.display = 'block';
         };
@@ -396,7 +695,7 @@
             currentCaseId = null;
         };
 
-        const submitResolution = () => {
+        const submitResolution = async () => {
             if (!currentCaseId) return;
 
             const newStatus = document.getElementById('new-status').value;
@@ -405,27 +704,37 @@
             
             const caseIndex = staffCases.findIndex(c => c.id === currentCaseId);
 
-            if (newStatus === 'Resolved' && resolutionSummary.trim() === '') {
-                alert('A public resolution summary is REQUIRED when marking a case as Resolved.');
+            if ((newStatus === 'RESOLVED' || newStatus === 'CLOSED') && resolutionSummary.trim() === '') {
+                alert('A public resolution summary is REQUIRED when marking a case as Resolved/Closed.');
                 return;
             }
 
-            // --- SIMULATION of Data Update ---
-            if (caseIndex !== -1) {
-                staffCases[caseIndex].status = newStatus;
-                
-                // In a real system, internalNotes and resolutionSummary would be sent to the Java backend 
-                // to be added to the grievance's log (S-03, S-05).
-                
-                alert(`Case ${currentCaseId} updated to: ${newStatus}. Notes logged successfully.`);
-                
+            // Call backend to update status
+            try {
+                const res = await authFetch('http://localhost:8080/api/grievances/' + currentCaseId + '/status?status=' + encodeURIComponent(newStatus), { method: 'PUT' });
+                if (!res.ok) {
+                    const txt = await res.text().catch(()=>null);
+                    throw new Error('Update failed: ' + res.status + ' ' + txt);
+                }
+                alert(`Case ${currentCaseId} updated to: ${newStatus}`);
                 closeModal();
-                renderCaseList(); // Refresh the list
+                await loadStaffCases();
+            } catch (e) {
+                console.error(e);
+                alert('Failed to update status: ' + e.message);
             }
         };
 
-        // Initial load
-        document.addEventListener('DOMContentLoaded', renderCaseList);
+        // debounce helper
+        function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t = setTimeout(()=>fn.apply(this,args), wait); }; }
+
+        // Initial load + wire toolbar events
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStaffCases();
+            const si = document.getElementById('staff-search'); if (si) si.addEventListener('input', debounce(renderCaseList, 250));
+            const sf = document.getElementById('staff-status-filter'); if (sf) sf.addEventListener('change', renderCaseList);
+            const rf = document.getElementById('staff-refresh'); if (rf) rf.addEventListener('click', loadStaffCases);
+        });
     </script>
 </body>
 </html>
