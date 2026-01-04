@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import com.Info_intern.Hgs.security.JwtUtil;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -45,10 +47,52 @@ public class AuthController {
 
         return new AuthResponse(token, user);
     }
+
+    @PostMapping("/forgot/request")
+    public ResponseEntity<?> forgotRequest(@RequestBody IdentifierRequest req) {
+        try {
+            userService.sendOtp(req.getIdentifier());
+            return ResponseEntity.ok().body("OTP sent if the account exists");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+    }
+
+    @PostMapping("/forgot/reset")
+    public ResponseEntity<?> forgotReset(@RequestBody ResetRequest req) {
+        try {
+            userService.resetPasswordWithOtp(req.getIdentifier(), req.getOtp(), req.getNewPassword());
+            return ResponseEntity.ok().body("Password updated successfully");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+        }
+    }
 }
 
 @Data
 class LoginRequest {
     private String email;
     private String password;
+}
+
+class IdentifierRequest {
+    private String identifier;
+
+    public String getIdentifier() { return identifier; }
+    public void setIdentifier(String identifier) { this.identifier = identifier; }
+}
+
+class ResetRequest {
+    private String identifier;
+    private String otp;
+    private String newPassword;
+
+    public String getIdentifier() { return identifier; }
+    public void setIdentifier(String identifier) { this.identifier = identifier; }
+
+    public String getOtp() { return otp; }
+    public void setOtp(String otp) { this.otp = otp; }
+
+    public String getNewPassword() { return newPassword; }
+    public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
 }
