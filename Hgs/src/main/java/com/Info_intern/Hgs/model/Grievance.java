@@ -43,8 +43,7 @@ public class Grievance {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "grievance_images", joinColumns = @JoinColumn(name = "grievance_id"))
-    @Column(name = "image_data", columnDefinition = "TEXT")
-    private List<String> images = new ArrayList<>();
+    @OneToMany(mappedBy = "grievance", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<GrievanceImage> images = new ArrayList<>();
+
 }
