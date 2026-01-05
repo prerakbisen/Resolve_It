@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class HgsApplication {
 
 	public static void main(String[] args) {
+		EarlyHealthServer.start();
 		SpringApplication.run(HgsApplication.class, args);
 	}
 
